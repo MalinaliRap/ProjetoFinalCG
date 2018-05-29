@@ -1,0 +1,49 @@
+﻿Nosso programa terá as seguintes capacidades:
+	1) Menu com interação do mouse, 2 botões, um para iniciar a simulação e outro para sair da simulação
+	2) Simulação com perspectiva do interior de um carro visualizando uma rua de 4 faixas, 2 para cada sentido.
+	3) Interação de botões para criar carros em ambos os sentidos
+	4) Interação com as teclas de setas, para reduzir ou aumentar a velocidade do carro principal
+	5) Arvores de fundo presentes ao lado da rua para dar noção de velocidade e movimento
+	6) Velocimetro presente na tela, indicando a velocidade atual do carro.
+	7) Iluminação para a cena inteira //Parece mais dificil do que é de verdade, mas uma pesquisa rápida mostra que é só algumas declarações e alterações simples
+
+	Bônus:
+		Implementar sistema de ultrapassagem e parada para carros na mesma faixa
+		Implementar controle da câmera usando o mouse
+
+
+Como as coisas funcionarão:
+	Menu principal: 
+		Usar glutMouseFunc para ler x,y do mouse e manusear cliques do mouse
+		Desenhar os botões do jeito que preferir, basta que o clique sobre o botão resulte na mudança desejada.
+	Simulação:
+		Câmera perspectiva que pode ou estar dentro do carro, ou ao lado dele
+		Todo objeto deve ter sua própria função de desenho, onde ele é desenhado NA ORIGEM (para poder ser devidamente transformado)
+		Carros:
+			As coordenadas do modelo do carro devem ter seu eixo dianteiro apontado para x positivo para simplificar sua rotação
+			O carro principal nunca tem sua posição alterada, ao invez disso, todos os outros objetos são movidos relativos a ele
+			Todo carro tem um vetor de direção, um vetor para sua posição e sua velocidade atual.
+				A posição de todo carro é alterada a cada a cada quadro (30 quadros por segundo) de acordo com sua direção e velocidade (direção * velocidade)
+				Para transformar e desenhar corretamente o carro, ele é transformado com base na direção e velocidade do carro principal de acordo com a seguinte formula:
+					posição += (velocidade-velocidadeReferencial) //velocidade relativa
+				Ou seja, caso o carro esteja no sentido oposto do principal com velocidade 10, se sua velocidade for -10, a velocidade relativa é -20
+				Quando o carro sair da visualização, ele deve ser removido / deletado.
+				As rodas devem ser animadas e girar.
+		Arvores:
+			Toda arvore tem sua posição e rotação
+				Como a arvore tem velocidade = 0, sua posição é transformada com base na velocidade do carro principal
+				Quando uma arvore sai da visualização, sua posição é reiniciada com X aleatório(constricto aos lados da rua). 
+				Assim, a arvore não aparece sempre no mesmo lugar na simulação
+		Rua:
+			Toda rua tem sua posição e rotação
+			Um retângulo principal cinza com vários retângulos amarelos no centro, servindo de faixa
+			O programa principal devera ter 3 retângulos cuja posição é constantemente alterada com base na velocidade do carro principal
+			Quando um dos retângulos chega a uma certa distância do fim da tela, sua posição é reiniciada para trás de todos os outros
+			Isso garante que os 3 retângulos fiquem ciclando embaixo do veiculo e constantemente movendo para trás, dando impressão de movimento.
+	Teclado:
+		Usar glutKeyboardFunc para ler os dois botões que criam carros, um para cada sentido
+		Usar glutSpecialFunc para ler os botões de seta para aumentarem ou diminuirem a velocidade do carro principal.
+	Velocimetro:
+		O único objeto que não é transformado ou alterado ao redor da tela
+		Basicamente um arco com uma reta interna que vai de 180° até 0° com base na velocidade atual do vehiculo.
+
