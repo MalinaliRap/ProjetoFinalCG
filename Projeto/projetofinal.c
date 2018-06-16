@@ -1,7 +1,5 @@
 #include "projeto.h"
 
-
-
 // Initialization routine.
 void setup(void) 
 {
@@ -28,6 +26,10 @@ void keyInput(unsigned char key, int x, int y)
    else keySimulacao(key, x, y);
 }
 
+void specialInput(int key, int x, int y){
+   if(menu){} //keyMenu(key, x, y);
+   else specialKeySimulacao(key, x, y);
+}
 // Routine to output interaction instructions to the C++ window.
 void printInteraction(void)
 {
@@ -49,6 +51,7 @@ int main(int argc, char **argv) {
    glutDisplayFunc(drawScene); 
    glutReshapeFunc(resize);  
    glutKeyboardFunc(keyInput);
+   glutSpecialFunc(specialInput);
 
    setup();
 
