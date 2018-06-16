@@ -1,31 +1,13 @@
 #include "projeto.h"
 
-int menu = 0; //variavel de estado
-void inicializarGlobais(){
-   int i;
-   for(i = -1; i<=1; i++){
-      G_Ruas[i+1].angle = 0.0;
-      G_Ruas[i+1].pos.x = 66.0*i; //Cada rua e inicializada 66.0 unidades em x atras da proxima {-66, 0, +66}
-      G_Ruas[i+1].pos.y = 0.0;
-      G_Ruas[i+1].pos.z = 0.0;
-   }
-   G_carros[0] = (carro*) malloc(sizeof(carro)); //carros sao declarados como ponteiros de struct para poder checar se um carro existe ou nao
-   G_carros[0]->pos.x = 0.0;                    //simplesmente checando se seu ponteiro e nulo ou nao
-   G_carros[0]->pos.y = 4.0;
-   G_carros[0]->pos.z = 7.0;
-   G_carros[0]->direc.x = 1.0; //vetor unitario com direcao x positivo
-   G_carros[0]->direc.y = 0.0; //sentido de movimento do carro principal
-   G_carros[0]->direc.z = 0.0;
-   G_carros[0]->veloc = 1.0;
-}
+
 
 // Initialization routine.
 void setup(void) 
 {
    glClearColor(0.0, 0.0, 0.0, 0.0);
-   inicializarGlobais();
-
-   angle = 90;
+   inicializarSimulacao();
+   angle = 45;
 }
 
 // OpenGL window reshape routine.
@@ -56,6 +38,7 @@ void printInteraction(void)
 int main(int argc, char **argv) {
    srand(time(NULL));
    printInteraction();
+   menu = 0; //inicializando variavel de estado
 
    glutInit(&argc, argv);
 
