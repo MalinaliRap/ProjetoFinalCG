@@ -5,6 +5,16 @@ float modulo(vector3 vetor){ //retorna o modulo do vetor (normalize vector)
    return sqrt(aux);
 }
 
+vector3 escalarVetor(float escalar, vector3 vetor){
+   vetor.x *= escalar; vetor.y *= escalar; vetor.z *= escalar;
+   return vetor;
+}
+
+vector3 somarVetores(vector3 a, vector3 b){
+   a.x += b.x; a.y += b.y; a.z += b.z;
+   return a;
+}
+
 vector3 normalizar(vector3 vetor){ //recebe um vetor qualquer e retorna sua versao normalizada
    float aux = modulo(vetor);
 
@@ -13,73 +23,89 @@ vector3 normalizar(vector3 vetor){ //recebe um vetor qualquer e retorna sua vers
 }
 
 
-void criarCarro(vector3 direc){
+void criarCarro(vector3 direc){ //funcao para criar carros que sempre vem ou da esquerda ou da direita
    int i;
    for(i = 1; i<10; i++){
-      if(G_carros[i] != NULL) continue; //primeiro verifica se ha um espaco vazio no vetor
-      G_carros[i] = (carro*) malloc(sizeof(carro)); //se encontrou um espaco vazio, alocar memoria pro carro novo
-      G_carros[i]->pos.x = direc.x>0? -100.0: 100.0; //se a velocidade x for positiva, o carro vem da esquerda, senao, da direita
-      G_carros[i]->pos.y = 4.0; //sua posicao inicial
-      G_carros[i]->pos.z = (direc.x>0? 21.0: -7.0) +((rand()%2 * 2) * -7); //aleatoriza qual faixa ele esta, esquerda ou direita, para seu sentido
-      G_carros[i]->veloc = modulo(direc);
+      if(G_Carros[i] != NULL) continue; //primeiro verifica se ha um espaco vazio no vetor
+      G_Carros[i] = (carro*) malloc(sizeof(carro)); //se encontrou um espaco vazio, alocar memoria pro carro novo
+      G_Carros[i]->pos.x = direc.x>0? -180.0: 180.0; //se a velocidade x for positiva, o carro vem da esquerda, senao, da direita
+      G_Carros[i]->pos.y = 4.0; //sua posicao inicial
+      G_Carros[i]->pos.z = (direc.x>0? 52.5: -17.5) +((rand()%2 * 2) * -17.5); //aleatoriza qual faixa ele esta, esquerda ou direita, para seu sentido
+      G_Carros[i]->veloc = modulo(direc);
       direc = normalizar(direc); //normaliza o vetor, para garantir que os valores abaixo estejam corretos
-      G_carros[i]->direc.x = direc.x; //vetor unitario com direcao dada pela funcao
-      G_carros[i]->direc.y = direc.y; //sentido de movimento do carro
-      G_carros[i]->direc.z = direc.z;
+      G_Carros[i]->direc.x = direc.x; //vetor unitario com direcao dada pela funcao
+      G_Carros[i]->direc.y = direc.y; //sentido de movimento do carro
+      G_Carros[i]->direc.z = direc.z;
       break; //novo carro criado, abandonar laco e sair da funcao
    }
 }
 
 void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada apenas para testar as funcionalidades do carro
-   glColor3f(0.0, 1.0, 1.0);
-   glutSolidSphere(4.0, 100, 100); //raio, fatias em z, pilhas em z. 100 * 100 partes
+   glColor3f(0.0, 1.0, 1.0); //cor do objeto
+   // Capacidade de brilho do material
+   GLfloat especularidade[4]={1.0,1.0,1.0,1.0};
+   GLint especMaterial = 100;
+   // Define a refletância do material
+   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
+   // Define a concentração do brilho
+   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+
+   glutSolidCube(10.0);
    glPushMatrix();
-      glTranslatef(5.0, 0.0, 0.0); //desenha um circulo vermelho menor na frente do circulo inicial ,para ser possivel discernir direcao
+      glTranslatef(11.0, 0.0, 0.0); //desenha um circulo vermelho menor na frente da forma inicial ,para ser possivel discernir direcao
       glColor3f(1.0, 0.0, 0.0);
       glutSolidSphere(1.0, 100, 100); //raio, fatias em z, pilhas em z. 100 * 100 partes
    glPopMatrix();
 
 }
 
+void desenharFaixa(float w, float h, float l){ //funcao adcional para desenhar faixas, uma vez que foi necessario adcionar uma profundidade
+   glBegin(GL_QUADS);               //virtual, para que a faixa nao funcionasse de forma imprevisivel
+      glVertex3f(-w, 0, -l);
+      glVertex3f(+w, 0, -l); 
+      glVertex3f(+w, 0, +l); //desenha a faixa horizontal normalmente
+      glVertex3f(-w, 0, +l);
+   glEnd();
+
+   glBegin(GL_QUADS);
+      glVertex3f(-w, -h, +l);
+      glVertex3f(+w, -h, +l); //desenha uma face lateral diretamente abaixo 
+      glVertex3f(+w, +h, +l); //para que caso a faixa seja vista de lado, ela nao seja invisivel
+      glVertex3f(-w, +h, +l);
+   glEnd();
+}
+
 void desenharRua(){
    glColor3f(0.3, 0.3, 0.3); //cinza
+   GLfloat especularidade[4]={0.1,0.1,0.1,1.0};
+   GLint especMaterial = 10;
+   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
+   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+   
    glBegin(GL_QUADS);
-      glVertex3f(-33.0, 0.0, -30);
-      glVertex3f(+33.0, 0.0, -30); //desenha a base da rua
-      glVertex3f(+33.0, 0.0, +30); //retangulo 66:60 com centro em (0,0,0)
-      glVertex3f(-33.0, 0.0, +30);
+      glVertex3f(-120.0, 0.0, -70.5);
+      glVertex3f(+120.0, 0.0, -70.5); //desenha a base da rua
+      glVertex3f(+120.0, 0.0, +70.5); //retangulo 24m:14.1m com centro em (0,0,0)
+      glVertex3f(-120.0, 0.0, +70.5);
    glEnd();
 
    glColor3f(1.0, 1.0, 0.0); //amarelo
-   glBegin(GL_QUADS);
-      glVertex3f(-33.0, 0.0, -0.5);
-      glVertex3f(+33.0, 0.0, -0.5); //desenha uma unica faixa central amarela sobre a rua
-      glVertex3f(+33.0, 0.0, +0.5);
-      glVertex3f(-33.0, 0.0, +0.5);
-   glEnd();
+   desenharFaixa(120, 0.5, 0.5);
+   
+   int i;
+   glColor3f(1.0, 1.0, 1.0);
 
-   glPushMatrix(); //empilha a matriz atual para salvar-la
-   int x;
-   for(x = -1; x<=1; x++){ //faz 3 retangulos, um em cada ponta da rua e um no meio
-      glColor3f(1.0, 1.0, 1.0);
-      glPushMatrix(); //empilha a matriz atual para alterar apenas ela
-      glTranslatef(x*33.0, 0.0, 15.0); //progressivamente move ao longo da rua para desenhar as faixas, fazendo 3 retangulos brancos
-      glBegin(GL_QUADS);
-         glVertex3f(-2.0, 0.0, -0.5);
-         glVertex3f(+2.0, 0.0, -0.5); //retangulo 4:1 com centro em (0.0.0)
-         glVertex3f(+2.0, 0.0, +0.5);
-         glVertex3f(-2.0, 0.0, +0.5);
-      glEnd();
+   glPushMatrix(); //empilha a matriz atual para alterar apenas ela
+   for (i = -2; i < 2; ++i){
+      glPushMatrix();
+      glTranslatef(i*60, 0.0, 35.5); //move para um dos lados da rua e desenha a faixa la
+      desenharFaixa(10, 0.5, 0.5);
       glPopMatrix(); //remove a matriz do topo
 
+
       glPushMatrix(); //adciona outra matriz no topo
-      glTranslatef(x*33.0, 0.0, -15.0); //progressivamente move ao longo do lado oposto (z=-10) para desenhar os retangulos da outra faixa
-      glBegin(GL_QUADS);
-         glVertex3f(-2.0, 0.0, -0.5);
-         glVertex3f(+2.0, 0.0, -0.5);
-         glVertex3f(+2.0, 0.0, +0.5);
-         glVertex3f(-2.0, 0.0, +0.5);
-      glEnd();
+      glTranslatef(i*-60, 0.0, -35.5); //move para o lado oposto
+      desenharFaixa(10, 0.5, 0.5);
       glPopMatrix();
    }
    glPopMatrix();
@@ -94,25 +120,5 @@ void desenharObjeto(void (*funcPointer)(void), float x, float y, float z, float 
    glPopMatrix();
 }
 
-//funcao de animacao, onde todas as alteracoes de posicoes sao feitas antes de redesenhar na tela
-void atualizarPosicoes(int a){
-   int i;
-   for(i=0; i<3; i++){
-      G_Ruas[i].pos.x -= G_carros[0]->veloc;
-      if(G_Ruas[i].pos.x < -99.0){ //caso a rua esteja pra sair da tela
-         G_Ruas[i].pos.x = 99.0 + (G_Ruas[i].pos.x + 99.0); //mova a para tras da rua mais distante
-      }
-   }
-
-   for(i=1; i<10; i++){
-      if(G_carros[i] == NULL) continue; //caso o carro nao exista, nao realizar movimentacao para ele
-      //mover o carro com base na velocidade relativa ao carro principal [0]
-      G_carros[i]->pos.x += (G_carros[i]->veloc * G_carros[i]->direc.x) - (G_carros[0]->veloc * G_carros[0]->direc.x);
-      if(G_carros[i]->pos.x < -100 || G_carros[i]->pos.x > 100){ //caso ele saia da tela
-         free(G_carros[i]); //desalocar sua memoria e por fim
-         G_carros[i] = NULL;//abandonar o ponteiro anterior
-      }
-   }
-
-   glutPostRedisplay();
-}
+//todo Implementar Arvores / Predios / Objeto de fundo
+//todo Implementar desenho da grama (Com texturas!!)
