@@ -10,6 +10,7 @@
 #include <GL/glut.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h> //strlen
 
 
 
@@ -43,21 +44,31 @@ typedef struct luz{
 	char enabled; //variavel booleana para determinar se essa luz esta ativada ou nao
 } luz;
 
+typedef struct velocimetro{
+	float tamanho;
+	float ponteiro; //guardado em radianos
+	float max; //max de velocidade que o ponteiro mostra
+} velocimetro;
+
 //declaracoes de variaveis globais
 int menu; //variavel de estado, para controlar se o desenho atual deve ser o menu ou a simulacao
 GLfloat angle, fAspect;
 luz G_Luzes[2];
 rua G_Ruas[3];
 carro *G_Carros[10]; //G_Carros[0] e o carro principal de nossa simulacao
+velocimetro G_velocimetro;
 
 
 float modulo(vector3);
 vector3 escalarVetor(float, vector3);
 vector3 somarVetores(vector3,vector3);
 vector3 normalizar(vector3);
+void writeBitmapString(void*, char*);
 void criarCarro(vector3);
 void desenharCarro();
 void desenharRua();
+void desenharVelocimetro(velocimetro);
+float calcularAnguloPonteiro(float,float);
 void desenharObjeto(void(*funcPointer)(void), float, float, float, float);
 void atualizarPosicoes(int);
 //        WIP
@@ -68,6 +79,7 @@ void inicializarSimulacao();
 void animacaoLuz();
 void defineIluminacao();
 void keySimulacao(unsigned char, int, int);
+void specialKeySimulacao(int, int, int);
 void resizeSimulacao(int, int);
 
 #endif

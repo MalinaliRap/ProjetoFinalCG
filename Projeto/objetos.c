@@ -23,6 +23,13 @@ vector3 normalizar(vector3 vetor){ //recebe um vetor qualquer e retorna sua vers
 }
 
 
+static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
+void writeBitmapString(void *font, char *string){
+   char *c;
+   for (c = string; *c != '\0'; c++) glutBitmapCharacter(font, *c);
+} 
+
+
 void criarCarro(vector3 direc){ //funcao para criar carros que sempre vem ou da esquerda ou da direita
    int i;
    for(i = 1; i<10; i++){
@@ -60,6 +67,11 @@ void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada 
 }
 
 void desenharFaixa(float w, float h, float l){ //funcao adcional para desenhar faixas, uma vez que foi necessario adcionar uma profundidade
+   GLfloat especularidade[4]={0.4,0.4,0.4,1.0};
+   GLint especMaterial = 20;
+   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
+   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+
    glBegin(GL_QUADS);               //virtual, para que a faixa nao funcionasse de forma imprevisivel
       glVertex3f(-w, 0, -l);
       glVertex3f(+w, 0, -l); 
@@ -109,6 +121,75 @@ void desenharRua(){
       glPopMatrix();
    }
    glPopMatrix();
+}
+
+void desenharVelocimetro(velocimetro vel){ //funcao especial para desenhar o velocimetro, unico caso onde nao usamos desenharObjeto
+   glDisable(GL_LIGHTING); //desabilitamos iluminacao temporariamente, para que ela nao afete o velocimetro
+   glMatrixMode(GL_PROJECTION); //mudamos a matriz que desejamos alterar para projecao
+   glPushMatrix(); //salvamos a matriz de projecao tridimensional em perspectiva anterior
+   glLoadIdentity();
+   glOrtho(0.0, 10.0, 0.0, 10.0, -1, 1); //criamos uma projecao ortogonal
+   glMatrixMode(GL_MODELVIEW);
+   glPushMatrix(); //salvamos a matriz anterior
+   glLoadIdentity(); //carregamos a identidade na projecao de modelo
+
+   float r;
+   glTranslatef(vel.tamanho, 10-vel.tamanho, 0.0); //o desenho sera feito no topo superior esquerdo da simulacao
+
+   glColor3f(0.8, 0.0, 0.0);
+   glBegin(GL_TRIANGLE_FAN); //ele e composto de varios arcos, 1 externo para borda, um interno para leitura, e um para o ponteiro
+      glVertex2f(0.0, 0.0);
+      for(r=0; r<=PI+PI/100; r+=PI/100){ //raio externo do velocimetro
+         glVertex3f(cos(r)*vel.tamanho, sin(r)*vel.tamanho, 0.0);
+      }
+   glEnd();
+
+
+   glColor3f(1.0,1.0,1.0);
+   glBegin(GL_TRIANGLE_FAN);
+      glVertex2f(0.0, 0.0);
+      for(r=0; r<=PI+PI/100; r+=PI/100){ //parte branca, para escrita ser legivel
+         glVertex3f(cos(r)*(vel.tamanho*9/10), sin(r)*(vel.tamanho*9/10), 0.1);
+      }
+   glEnd();
+
+   glColor3f(0.6, 0.0, 0.0);
+   glBegin(GL_TRIANGLE_FAN);
+      glVertex2f(0.0, 0.0);
+      for(r=0; r<=PI+PI/100; r+=PI/100){ //centro vermelho, para servir como "base" do ponteiro
+         glVertex3f(cos(r)*vel.tamanho/4, sin(r)*vel.tamanho/4, 0.2);
+      }
+   glEnd();
+
+   int i;
+   r = 0;
+   float offset; //dependendo do comprimento da string, ela deve ser jogada mais a esquerda para centralizar corretamente
+   char aux[4]; //string auxiliar para converter inteiros que deverao ser corretamente desenhados na tela
+   glColor3f(0.0, 0.0, 0.0);
+   for(i=0; i<=vel.max; i+=10){
+      sprintf(aux, "%d", i);
+      offset = strlen(aux) * 0.1; //cos negativo para que x seja invertido e o circulo venha da esquerda pra direita e nao vice-versa
+      glRasterPos3f(-(cos(r) * (vel.tamanho*8/10)) - offset, sin(r) * (vel.tamanho*8/10), 0.3);
+      writeBitmapString((void*)font, aux);
+      r+= PI/(vel.max/10);
+   }
+
+   glLineWidth(2);
+   glBegin(GL_LINES);
+      glVertex3f(0.0, 0.0, 0.0); //cos invertido para o ponteiro acompanhar a velocidade real
+      glVertex3f(-cos(vel.ponteiro) * (vel.tamanho*9/10), sin(vel.ponteiro) * (vel.tamanho*9/10), 0.3);
+   glEnd();
+
+   glMatrixMode(GL_PROJECTION);
+   glPopMatrix(); //popamos as matrizes novas, para retornamos as funcoes de projecao anteriores
+   glMatrixMode(GL_MODELVIEW);
+   glPopMatrix();
+   glEnable(GL_LIGHTING); //e por fim, re habilitamos a iluminacao
+}
+
+float calcularAnguloPonteiro(float max, float velocidade){ //recebe a velocidade maxima do ponteiro e a velocidade atual
+   //a velocidade e recebida em decimetros por segundo, entao basta converter a velocidade maxima em decimetros tambem
+   return (velocidade/(max*100/36)) * PI;
 }
 
 //funcao especial que recebe a funcao de um objeto a ser desenhado, move a origem para (x,y,z) e rotaciona angl normal a y para desenhar
