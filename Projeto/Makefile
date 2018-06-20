@@ -1,6 +1,6 @@
 #OBJS specifies which files to compile as part of the project
 # OBJS = exemplo.cpp
-OBJ = projetofinal.c objetos.c simulacao.c
+OBJ = projetofinal.c objetos.c simulacao.c menu.c
 #code.c
 
 #CC specifies which compiler we're using
