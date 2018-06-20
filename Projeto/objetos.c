@@ -67,6 +67,7 @@ void criarCarro(vector3 direc){ //funcao para criar carros que sempre vem ou da 
       G_Carros[i]->direc.x = direc.x; //vetor unitario com direcao dada pela funcao
       G_Carros[i]->direc.y = direc.y; //sentido de movimento do carro
       G_Carros[i]->direc.z = direc.z;
+      G_Carros[i]->rot = 0;
       break; //novo carro criado, abandonar laco e sair da funcao
    }
 }
@@ -75,6 +76,7 @@ void desenharRoda(){
    float r;
    glBegin(GL_TRIANGLE_STRIP);
       for(r=0; r<2*PI+PI/50; r+=PI/50){
+         glNormal3f(cos(r), sin(r), 0);
          glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
          glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
       }
@@ -82,17 +84,35 @@ void desenharRoda(){
 
    glColor3f(0.3, 0.3, 0.3);
    glBegin(GL_LINES);
-      for(r=0; r<2*PI+PI/8; r+=PI/8){
-         glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
+      for(r=0; r<2*PI+PI/4; r+=PI/4){
+         glNormal3f(cos(r), sin(r), 1);
          glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
+         glVertex3f(0, 0, 0);
+      }
+   glEnd();
+
+   glBegin(GL_LINES);
+      for(r=0; r<2*PI+PI/4; r+=PI/4){
+         glNormal3f(cos(r), sin(r), -1);
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
+         glVertex3f(0, 0, 0);
       }
    glEnd();
 
    glColor3f(0.7, 0.7, 0.7);
    glBegin(GL_TRIANGLE_FAN);
+      glNormal3f(0, 0, 1);
       glVertex3f(0.0, 0.0, 0.0);
       for(r=0; r<2*PI+PI/50; r+=PI/50){
          glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
+      }
+   glEnd();
+
+   glBegin(GL_TRIANGLE_FAN);
+      glNormal3f(0, 0, -1);
+      glVertex3f(0.0, 0.0, 0.0);
+      for(r=0; r<2*PI+PI/50; r+=PI/50){
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
       }
    glEnd();
 }
@@ -115,36 +135,45 @@ void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada 
    float r;
    glPushMatrix();
    glScalef(0.8, 0.8, 0.8);
-   glBegin(GL_TRIANGLE_STRIP);
+   glBegin(GL_QUAD_STRIP);
+      glNormal3f(-1, 0, 0);
       glVertex3f(-22.5   , 0.0 , -13.0);
       glVertex3f(-22.5   , 0.0 , 13.0);
       glVertex3f(-22.5   , 7.5 , -13.0);
       glVertex3f(-22.5   , 7.5 , 13.0);
+      glNormal3f(0, 1, 0);
       glVertex3f(-11.25 , 7.5 , -13.0);
       glVertex3f(-11.25 , 7.5 , 13.0);
+      glNormal3f(-7.5, 5.625, 0);
       glVertex3f(-5.625, 15.0, -13.0);
       glVertex3f(-5.625, 15.0, 13.0);
+      glNormal3f(0, 1, 0);
       glVertex3f(5.625, 15.0, -13.0);
       glVertex3f(5.625, 15.0, 13.0);
+      glNormal3f(7.5, 5.625, 0);
       glVertex3f(11.25 , 7.5 , -13.0); //desenha a lataria
       glVertex3f(11.25 , 7.5 , 13.0);
+      glNormal3f(0, 1, 0);
       glVertex3f(22.5  , 7.5 , -13.0);
       glVertex3f(22.5  , 7.5 , 13.0);
+      glNormal3f(1, 0, 0);
       glVertex3f(22.5  , 0.0 , -13.0);
       glVertex3f(22.5  , 0.0 , 13.0);
-      for(r=0; r<PI+PI/50; r+=PI/50){
-         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
-         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
-      }
-      for(r=0; r<PI+PI/50; r+=PI/50){
-         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
-         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
-      }
+      // for(r=0; r<PI+PI/50; r+=PI/50){
+         // glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+         // glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);          contorno das rodas
+      // }
+      // for(r=0; r<PI+PI/50; r+=PI/50){
+         // glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+         // glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
+      // }
+      glNormal3f(-1, 0, 0);
       glVertex3f(-22.5, 0.0, -13.0);
       glVertex3f(-22.5, 0.0, 13.0);
    glEnd();
 
    glBegin(GL_POLYGON);
+      glNormal3f(0, 0, 1);
       glVertex3f(-22.5   , 0.0 , 13.0);
       glVertex3f(-22.5   , 7.5 , 13.0);
       glVertex3f(-11.25 , 7.5 , 13.0); //lado esquerdo da lataria
@@ -163,6 +192,7 @@ void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada 
    glEnd();
 
    glBegin(GL_POLYGON);
+      glNormal3f(0, 0, -1);
       glVertex3f(-22.5   , 0.0 , -13.0);
       glVertex3f(-22.5   , 7.5 , -13.0);
       glVertex3f(-11.25 , 7.5 , -13.0); //ladi direito da lataria
@@ -179,38 +209,41 @@ void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada 
       }
       glVertex3f(-22.5, 0.0, -13.0);
    glEnd();
-   desenharObjeto(&desenharRoda, -13.5, 0.0, +13.5, 0);
-   desenharObjeto(&desenharRoda, -13.5, 0.0, -13.5, 180);
-   desenharObjeto(&desenharRoda, +13.5, 0.0, -13.5, 180);
-   desenharObjeto(&desenharRoda, +13.5, 0.0, +13.5, 0);
    glPopMatrix();
-
+   // desenharObjeto(&desenharRoda, -13.5, 0.0, +13.5, 0);
+   // desenharObjeto(&desenharRoda, -13.5, 0.0, -13.5, 180);
+   // desenharObjeto(&desenharRoda, +13.5, 0.0, -13.5, 180);
+   // desenharObjeto(&desenharRoda, +13.5, 0.0, +13.5, 0);
 
 }
 
 void desenharCaixa(float w, float h, float l){ //funcao adcional para desenhar faixas, uma vez que foi necessario adcionar uma profundidade
    glBegin(GL_QUADS);               //virtual, para que a faixa nao funcionasse de forma imprevisivel quando vista de angulos laterais
+      glNormal3f(0, 1, 0);
       glVertex3f(-w, +h, -l);
       glVertex3f(+w, +h, -l); 
       glVertex3f(+w, +h, +l); //desenha o topo da faixa, a parte horizontal visivel
       glVertex3f(-w, +h, +l);
    glEnd();
 
-   glBegin(GL_QUADS);               
+   glBegin(GL_QUADS);
+      glNormal3f(0, -1, 0);
       glVertex3f(-w, -h, -l);
       glVertex3f(+w, -h, -l); 
       glVertex3f(+w, -h, +l); //desenha a base
       glVertex3f(-w, -h, +l);
    glEnd();
 
-   glBegin(GL_QUADS);               
+   glBegin(GL_QUADS);
+      glNormal3f(1,0,0);
       glVertex3f(+w, -h, -l);
       glVertex3f(+w, +h, -l); 
       glVertex3f(+w, +h, +l); //desenha a lateral esquerda
       glVertex3f(+w, -h, +l);
    glEnd();
 
-   glBegin(GL_QUADS);               
+   glBegin(GL_QUADS);
+      glNormal3f(-1, 0, 0);
       glVertex3f(-w, -h, -l);
       glVertex3f(-w, +h, -l); 
       glVertex3f(-w, +h, +l); //desenha a lateral direita
@@ -218,6 +251,7 @@ void desenharCaixa(float w, float h, float l){ //funcao adcional para desenhar f
    glEnd();
 
    glBegin(GL_QUADS);
+      glNormal3f(0, 0, 1);
       glVertex3f(-w, -h, +l);
       glVertex3f(+w, -h, +l); //desenha a frente da faixa 
       glVertex3f(+w, +h, +l); 
@@ -225,6 +259,7 @@ void desenharCaixa(float w, float h, float l){ //funcao adcional para desenhar f
    glEnd();
 
    glBegin(GL_QUADS);
+      glNormal3f(0, 0, -1);
       glVertex3f(-w, -h, -l);
       glVertex3f(+w, -h, -l); //desenha o fundo da faixa 
       glVertex3f(+w, +h, -l); 
@@ -258,9 +293,21 @@ void desenharRua(){
 
 void desenharArvore(){ 
    float rotation; //rotacao 1
+   vector3 aux = {0,0,0}; //vetor auxiliar para calcular as normais
+   vector3 auxb = {0,0,0};
    glColor3f(0.31, 0.22, 0.19); //marrom
    glBegin(GL_TRIANGLE_STRIP);
       for(rotation = 0.0; rotation<2*PI+PI/30; rotation+= PI/30){
+         aux.x = (cos(rotation+(PI/30)))-(cos(rotation)); //vetor AB = B-A
+         aux.y = 0.0;
+         aux.z = (sin(rotation+(PI/30)))-(sin(rotation)); //dois vetores para descrever o plano
+
+         auxb.x = 0.0;
+         auxb.y = ALTURAARVORE/1.5 - (0.0);
+         auxb.z = 0.0; 
+         aux = computarNormal(auxb, aux); // calcula a normal a esses dois vetores, que sera equivalente ao plano
+
+         glNormal3f(aux.x, aux.y, aux.z);
          glVertex3f(cos(rotation)*LARGURACOPA/3, 0.0, sin(rotation)*LARGURACOPA/3); //desenha tronco
          glVertex3f(cos(rotation)*LARGURACOPA/5, ALTURAARVORE/1.5, sin(rotation)*LARGURACOPA/5);
       }
@@ -269,8 +316,18 @@ void desenharArvore(){
    glColor3f(0.41, 0.52, 0.2); //verde bonito
    glBegin(GL_TRIANGLE_STRIP);
       for(rotation = 0.0; rotation<2*PI+PI/30; rotation+= PI/30){
+         aux.x = (cos(rotation+(PI/30)))-(cos(rotation)); //vetor AB = B-A
+         aux.y = 0.0;
+         aux.z = (sin(rotation+(PI/30)))-(sin(rotation));
+
+         auxb.x = -(cos(rotation)*LARGURACOPA);
+         auxb.y = ALTURAARVORE - (ALTURAARVORE/3);
+         auxb.z = -(sin(rotation)*LARGURACOPA); 
+         aux = computarNormal(auxb, aux);
+
+         glNormal3f(aux.x, aux.y, aux.z);
          glVertex3f(cos(rotation)*LARGURACOPA, ALTURAARVORE/3, sin(rotation)*LARGURACOPA);
-         glVertex3f(cos(rotation), ALTURAARVORE, sin(rotation));
+         glVertex3f(0, ALTURAARVORE, 0);
       }
    glEnd();
 

@@ -35,13 +35,13 @@ void inicializarGlobais(){
    G_Luzes[0].pos.z = 0.0; //luz 0
 	G_Luzes[0].ambiente[0] = 0.2;  G_Luzes[0].ambiente[1] = 0.2;  G_Luzes[0].ambiente[2] = 0.2;  G_Luzes[0].ambiente[3] = 1.0;
    G_Luzes[0].difusa[0] = 1.0;    G_Luzes[0].difusa[1] = 0.75;   G_Luzes[0].difusa[2] = 0.21;   G_Luzes[0].ambiente[3] = 1.0;
-   G_Luzes[0].especular[0] = 0.6; G_Luzes[0].especular[1] = 0.6; G_Luzes[0].especular[2] = 0.6; G_Luzes[0].ambiente[3] = 0.6;
+   G_Luzes[0].especular[0] = 0.1; G_Luzes[0].especular[1] = 0.1; G_Luzes[0].especular[2] = 0.1; G_Luzes[0].ambiente[3] = 0.1;
    G_Luzes[0].enabled = 1;
    //luz 1
    G_Luzes[1].pos = escalarVetor(-1, G_Luzes[0].pos); //posicao invertida em relacao a luz 0
    G_Luzes[1].ambiente[0] = 0.1;  G_Luzes[1].ambiente[1] = 0.1;  G_Luzes[1].ambiente[2] = 0.1;  G_Luzes[1].ambiente[3] = 1.0;
    G_Luzes[1].difusa[0] = 0.1;    G_Luzes[1].difusa[1] = 0.2;    G_Luzes[1].difusa[2] = 0.4;    G_Luzes[1].ambiente[3] = 1.0;
-   G_Luzes[1].especular[0] = 0.5; G_Luzes[1].especular[1] = 0.5; G_Luzes[1].especular[2] = 0.5; G_Luzes[1].ambiente[3] = 1.0;
+   G_Luzes[1].especular[0] = 0.1; G_Luzes[1].especular[1] = 0.1; G_Luzes[1].especular[2] = 0.1; G_Luzes[1].ambiente[3] = 1.0;
    G_Luzes[1].enabled = 0;
 
    G_estadoDia = 1;
@@ -72,9 +72,11 @@ void inicializarSimulacao(void){
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_NORMALIZE);
 	
 	glShadeModel(GL_SMOOTH);
 }
+
 void animacaoLuz(){
 	int i;
 	float porDoSol[3] = {0.79, 0.21, 0.018}; //cor para o por do sol
@@ -202,7 +204,7 @@ void atualizarPosicoes(int a){
       }
    }
 
-   for(i=1; i<10; i++){
+   for(i=0; i<10; i++){
       if(G_Carros[i] == NULL) continue; //caso o carro nao exista, nao realizar movimentacao para ele
       //mover o carro com base na velocidade relativa ao carro principal [0]
       aux = escalarVetor(-G_Carros[0]->veloc/G_timeScale, G_Carros[0]->direc); //calcula o movimento relativo do carro principal
@@ -245,6 +247,7 @@ void simulacao(void){
    // glColor3f(0.2, 0.2, 0.2);
 
    glBegin(GL_QUADS);
+   	glNormal3f(0, 1, 0);
    	glVertex3f(-250, -1, 600);
    	glVertex3f(-250, -1, -600); //desenha a grama ao redor
    	glVertex3f(250, -1, -600);
@@ -258,12 +261,27 @@ void simulacao(void){
    //calculamos o angulo do vetor de direcao do carro para definirmos a rotacao de seu desenho usando a funcao
    //atan para z/x. Como atan so retorna valores entre -pi/2 e pi/2, e necessario observar o caso onde o vetor aponta na
    //direcao contraria, ou seja, seu x seja menor que 0, para assim pegarmos o complemento do angulo gerado.
+   int j, k;
    for(i=0; i<10; i++){
       if(G_Carros[i] == NULL) continue;
       if(G_Carros[i]->direc.x >= 0) anglAux = atan(G_Carros[i]->direc.z / G_Carros[i]->direc.x) * 180 / PI;
       else anglAux = (atan(G_Carros[i]->direc.z / G_Carros[i]->direc.x)*180/PI)-180;
       desenharObjeto(&desenharCarro, G_Carros[i]->pos.x, G_Carros[i]->pos.y, G_Carros[i]->pos.z, -anglAux); //-angl porque opengl gira antihorario
-   }
+		glPushMatrix();
+		glTranslatef(G_Carros[i]->pos.x, G_Carros[i]->pos.y, G_Carros[i]->pos.z); //replica a matriz de desenho para o carro acima
+		glRotatef(-anglAux, 0, 1, 0);
+		glScalef(0.8, 0.8, 0.8);
+		for(j=-13; j<14; j+=26){ //-13, 13
+			for(k=-13; k<14; k+=26){ //-13, 13
+				glPushMatrix();
+				glTranslatef(j, 0, k); //posiciona a roda
+				glRotatef(G_Carros[i]->rot*5, 0, 0, -1); //aplica a rotacao da roda
+				desenharRoda();
+				glPopMatrix();
+			}
+		}
+		glPopMatrix();
+	}
 
    for(i=0; i<QUANTIDADEARVORES; i++){
    	desenharObjeto(&desenharArvore, G_Arvores[i].pos.x, G_Arvores[i].pos.y, G_Arvores[i].pos.z, G_Arvores[i].angle);

@@ -21,7 +21,7 @@ typedef struct carro{
    vector3 direc;      //vetor de direcao de movimento
    vector3 pos;        //use atan(z/x) para determinar o seu angulo em relacao a x
    float veloc;
-   float rot; //rotacao da roda
+   float rot;
 } carro;
 
 typedef struct arvore{
