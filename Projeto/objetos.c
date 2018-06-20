@@ -15,6 +15,10 @@ vector3 somarVetores(vector3 a, vector3 b){
    return a;
 }
 
+float produtoInterno(vector3 a, vector3 b){
+   return (a.x*b.x) + (a.y*b.y) + (a.z*b.z);
+}
+
 vector3 normalizar(vector3 vetor){ //recebe um vetor qualquer e retorna sua versao normalizada
    float aux = modulo(vetor);
 
@@ -22,23 +26,43 @@ vector3 normalizar(vector3 vetor){ //recebe um vetor qualquer e retorna sua vers
    return vetor;
 }
 
+vector3 computarNormal(vector3 a, vector3 b){ //retorna o vetor unitario normal aos vetores dados
+   vector3 aux;
+   aux.x = (a.y*b.z) - (a.z*b.y);                            //{{i,j,k}
+   aux.y = (a.x*b.z) - (a.z*b.x); //forma pseudo determinante {ax,ay,az}
+   aux.z = (a.x*b.y) - (a.y*b.x);                           //{bx,by,bz}}
+   return aux;
+}
 
-static long font = (long)GLUT_BITMAP_8_BY_13; // Font selection.
+float anguloEntreVetores(vector3 a, vector3 b){
+   float aux = acos(produtoInterno(a,b) / (modulo(a)*modulo(b))); //pi/2 -> -pi/2
+   return  (aux/PI) * 180;
+}
+
+
 void writeBitmapString(void *font, char *string){
    char *c;
-   for (c = string; *c != '\0'; c++) glutBitmapCharacter(font, *c);
+   for (c = string; *c != '\0'; c++) glutBitmapCharacter((void*)font, *c);
 } 
+
+void writeStrokeString(void *font, char *string){
+   char *c;
+   for (c = string; *c != '\0'; c++) glutStrokeCharacter((void*)font, *c);
+}
 
 
 void criarCarro(vector3 direc){ //funcao para criar carros que sempre vem ou da esquerda ou da direita
    int i;
+   float aux = G_Ruas[0].pos.z; //pega o valor de z das ruas, para poder criar carros relativo ao centro das ruas
    for(i = 1; i<10; i++){
       if(G_Carros[i] != NULL) continue; //primeiro verifica se ha um espaco vazio no vetor
       G_Carros[i] = (carro*) malloc(sizeof(carro)); //se encontrou um espaco vazio, alocar memoria pro carro novo
-      G_Carros[i]->pos.x = direc.x>0? -180.0: 180.0; //se a velocidade x for positiva, o carro vem da esquerda, senao, da direita
-      G_Carros[i]->pos.y = 4.0; //sua posicao inicial
-      G_Carros[i]->pos.z = (direc.x>0? 52.5: -17.5) +((rand()%2 * 2) * -17.5); //aleatoriza qual faixa ele esta, esquerda ou direita, para seu sentido
-      G_Carros[i]->veloc = modulo(direc);
+      G_Carros[i]->pos.x = direc.x>0? -180.0: 180.0; 
+      //se a velocidade x for positiva, o carro vem da esquerda, senao, da direita
+      G_Carros[i]->pos.y = 5.0; //sua posicao inicial
+      float posNaRua =  (LARGURAFAIXA/2) + ((rand()%2) * LARGURAFAIXA);
+      G_Carros[i]->pos.z = (direc.x>0? aux + posNaRua: aux + -posNaRua); //aleatoriza qual faixa ele esta, esquerda ou direita, para seu sentido
+      G_Carros[i]->veloc = modulo(direc); //pega o modulo desse vetor, sua velocidade pura
       direc = normalizar(direc); //normaliza o vetor, para garantir que os valores abaixo estejam corretos
       G_Carros[i]->direc.x = direc.x; //vetor unitario com direcao dada pela funcao
       G_Carros[i]->direc.y = direc.y; //sentido de movimento do carro
@@ -46,81 +70,211 @@ void criarCarro(vector3 direc){ //funcao para criar carros que sempre vem ou da 
       break; //novo carro criado, abandonar laco e sair da funcao
    }
 }
+void desenharRoda(){
+   glColor3f(0.0, 0.0, 0.0);
+   float r;
+   glBegin(GL_TRIANGLE_STRIP);
+      for(r=0; r<2*PI+PI/50; r+=PI/50){
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
+      }
+   glEnd();
 
+   glColor3f(0.3, 0.3, 0.3);
+   glBegin(GL_LINES);
+      for(r=0; r<2*PI+PI/8; r+=PI/8){
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), -1);
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
+      }
+   glEnd();
+
+   glColor3f(0.7, 0.7, 0.7);
+   glBegin(GL_TRIANGLE_FAN);
+      glVertex3f(0.0, 0.0, 0.0);
+      for(r=0; r<2*PI+PI/50; r+=PI/50){
+         glVertex3f((cos(r)*3.5), (sin(r)*3.5), 1);
+      }
+   glEnd();
+}
 void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada apenas para testar as funcionalidades do carro
-   glColor3f(0.0, 1.0, 1.0); //cor do objeto
-   // Capacidade de brilho do material
-   GLfloat especularidade[4]={1.0,1.0,1.0,1.0};
-   GLint especMaterial = 100;
-   // Define a refletância do material
-   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
-   // Define a concentração do brilho
-   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+   glColor3f(1.0, 1.0, 0.0); //cor do objeto
 
-   glutSolidCube(10.0);
+   // GLfloat especularidade[4]={1.0,1.0,1.0,1.0};
+   // GLint especMaterial = 100;
+   // glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
+   // glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+    // 
+    // Define a refletância do material
+    // Define a concentração do brilho
+    
+
+   // glPushMatrix();
+   // glScalef(45, 16, 26);
+   // glutSolidCube(1);
+   // glPopMatrix();
+   float r;
    glPushMatrix();
-      glTranslatef(11.0, 0.0, 0.0); //desenha um circulo vermelho menor na frente da forma inicial ,para ser possivel discernir direcao
-      glColor3f(1.0, 0.0, 0.0);
-      glutSolidSphere(1.0, 100, 100); //raio, fatias em z, pilhas em z. 100 * 100 partes
+   glScalef(0.8, 0.8, 0.8);
+   glBegin(GL_TRIANGLE_STRIP);
+      glVertex3f(-22.5   , 0.0 , -13.0);
+      glVertex3f(-22.5   , 0.0 , 13.0);
+      glVertex3f(-22.5   , 7.5 , -13.0);
+      glVertex3f(-22.5   , 7.5 , 13.0);
+      glVertex3f(-11.25 , 7.5 , -13.0);
+      glVertex3f(-11.25 , 7.5 , 13.0);
+      glVertex3f(-5.625, 15.0, -13.0);
+      glVertex3f(-5.625, 15.0, 13.0);
+      glVertex3f(5.625, 15.0, -13.0);
+      glVertex3f(5.625, 15.0, 13.0);
+      glVertex3f(11.25 , 7.5 , -13.0); //desenha a lataria
+      glVertex3f(11.25 , 7.5 , 13.0);
+      glVertex3f(22.5  , 7.5 , -13.0);
+      glVertex3f(22.5  , 7.5 , 13.0);
+      glVertex3f(22.5  , 0.0 , -13.0);
+      glVertex3f(22.5  , 0.0 , 13.0);
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
+      }
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
+      }
+      glVertex3f(-22.5, 0.0, -13.0);
+      glVertex3f(-22.5, 0.0, 13.0);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+      glVertex3f(-22.5   , 0.0 , 13.0);
+      glVertex3f(-22.5   , 7.5 , 13.0);
+      glVertex3f(-11.25 , 7.5 , 13.0); //lado esquerdo da lataria
+      glVertex3f(-5.625, 15.0, 13.0);
+      glVertex3f(5.625, 15.0, 13.0);
+      glVertex3f(11.25 , 7.5 , 13.0);
+      glVertex3f(22.5  , 7.5 , 13.0);
+      glVertex3f(22.5  , 0.0 , 13.0);
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
+      }
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), 13.0);
+      }
+      glVertex3f(-22.5, 0.0, 13.0);
+   glEnd();
+
+   glBegin(GL_POLYGON);
+      glVertex3f(-22.5   , 0.0 , -13.0);
+      glVertex3f(-22.5   , 7.5 , -13.0);
+      glVertex3f(-11.25 , 7.5 , -13.0); //ladi direito da lataria
+      glVertex3f(-5.625, 15.0, -13.0);
+      glVertex3f(5.625, 15.0, -13.0);
+      glVertex3f(11.25 , 7.5 , -13.0);
+      glVertex3f(22.5  , 7.5 , -13.0);
+      glVertex3f(22.5  , 0.0 , -13.0);
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+      }
+      for(r=0; r<PI+PI/50; r+=PI/50){
+         glVertex3f(-13.5+(cos(r)*3.5), 0.0+(sin(r)*3.5), -13.0);
+      }
+      glVertex3f(-22.5, 0.0, -13.0);
+   glEnd();
+   desenharObjeto(&desenharRoda, -13.5, 0.0, +13.5, 0);
+   desenharObjeto(&desenharRoda, -13.5, 0.0, -13.5, 180);
+   desenharObjeto(&desenharRoda, +13.5, 0.0, -13.5, 180);
+   desenharObjeto(&desenharRoda, +13.5, 0.0, +13.5, 0);
    glPopMatrix();
+
 
 }
 
-void desenharFaixa(float w, float h, float l){ //funcao adcional para desenhar faixas, uma vez que foi necessario adcionar uma profundidade
-   GLfloat especularidade[4]={0.4,0.4,0.4,1.0};
-   GLint especMaterial = 20;
-   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
-   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
+void desenharCaixa(float w, float h, float l){ //funcao adcional para desenhar faixas, uma vez que foi necessario adcionar uma profundidade
+   glBegin(GL_QUADS);               //virtual, para que a faixa nao funcionasse de forma imprevisivel quando vista de angulos laterais
+      glVertex3f(-w, +h, -l);
+      glVertex3f(+w, +h, -l); 
+      glVertex3f(+w, +h, +l); //desenha o topo da faixa, a parte horizontal visivel
+      glVertex3f(-w, +h, +l);
+   glEnd();
 
-   glBegin(GL_QUADS);               //virtual, para que a faixa nao funcionasse de forma imprevisivel
-      glVertex3f(-w, 0, -l);
-      glVertex3f(+w, 0, -l); 
-      glVertex3f(+w, 0, +l); //desenha a faixa horizontal normalmente
-      glVertex3f(-w, 0, +l);
+   glBegin(GL_QUADS);               
+      glVertex3f(-w, -h, -l);
+      glVertex3f(+w, -h, -l); 
+      glVertex3f(+w, -h, +l); //desenha a base
+      glVertex3f(-w, -h, +l);
+   glEnd();
+
+   glBegin(GL_QUADS);               
+      glVertex3f(+w, -h, -l);
+      glVertex3f(+w, +h, -l); 
+      glVertex3f(+w, +h, +l); //desenha a lateral esquerda
+      glVertex3f(+w, -h, +l);
+   glEnd();
+
+   glBegin(GL_QUADS);               
+      glVertex3f(-w, -h, -l);
+      glVertex3f(-w, +h, -l); 
+      glVertex3f(-w, +h, +l); //desenha a lateral direita
+      glVertex3f(-w, -h, +l);
    glEnd();
 
    glBegin(GL_QUADS);
       glVertex3f(-w, -h, +l);
-      glVertex3f(+w, -h, +l); //desenha uma face lateral diretamente abaixo 
-      glVertex3f(+w, +h, +l); //para que caso a faixa seja vista de lado, ela nao seja invisivel
+      glVertex3f(+w, -h, +l); //desenha a frente da faixa 
+      glVertex3f(+w, +h, +l); 
       glVertex3f(-w, +h, +l);
+   glEnd();
+
+   glBegin(GL_QUADS);
+      glVertex3f(-w, -h, -l);
+      glVertex3f(+w, -h, -l); //desenha o fundo da faixa 
+      glVertex3f(+w, +h, -l); 
+      glVertex3f(-w, +h, -l);
    glEnd();
 }
 
 void desenharRua(){
    glColor3f(0.3, 0.3, 0.3); //cinza
-   GLfloat especularidade[4]={0.1,0.1,0.1,1.0};
-   GLint especMaterial = 10;
-   glMaterialfv(GL_FRONT,GL_SPECULAR, especularidade);
-   glMateriali(GL_FRONT,GL_SHININESS,especMaterial);
-   
-   glBegin(GL_QUADS);
-      glVertex3f(-120.0, 0.0, -70.5);
-      glVertex3f(+120.0, 0.0, -70.5); //desenha a base da rua
-      glVertex3f(+120.0, 0.0, +70.5); //retangulo 24m:14.1m com centro em (0,0,0)
-      glVertex3f(-120.0, 0.0, +70.5);
-   glEnd();
-
+   desenharCaixa(120, 0.2, 70.5); //desenha a base da rua, retangulo 24m:14.1m com centro em 0,0,0
    glColor3f(1.0, 1.0, 0.0); //amarelo
-   desenharFaixa(120, 0.5, 0.5);
-   
+   desenharCaixa(120, 0.5, 0.5); //faixa amarela central
    int i;
    glColor3f(1.0, 1.0, 1.0);
-
+   
    glPushMatrix(); //empilha a matriz atual para alterar apenas ela
    for (i = -2; i < 2; ++i){
       glPushMatrix();
       glTranslatef(i*60, 0.0, 35.5); //move para um dos lados da rua e desenha a faixa la
-      desenharFaixa(10, 0.5, 0.5);
+      desenharCaixa(10, 0.5, 0.5);
       glPopMatrix(); //remove a matriz do topo
 
 
       glPushMatrix(); //adciona outra matriz no topo
       glTranslatef(i*-60, 0.0, -35.5); //move para o lado oposto
-      desenharFaixa(10, 0.5, 0.5);
+      desenharCaixa(10, 0.5, 0.5);
       glPopMatrix();
    }
    glPopMatrix();
+}
+
+void desenharArvore(){ 
+   float rotation; //rotacao 1
+   glColor3f(0.31, 0.22, 0.19); //marrom
+   glBegin(GL_TRIANGLE_STRIP);
+      for(rotation = 0.0; rotation<2*PI+PI/30; rotation+= PI/30){
+         glVertex3f(cos(rotation)*LARGURACOPA/3, 0.0, sin(rotation)*LARGURACOPA/3); //desenha tronco
+         glVertex3f(cos(rotation)*LARGURACOPA/5, ALTURAARVORE/1.5, sin(rotation)*LARGURACOPA/5);
+      }
+   glEnd();
+
+   glColor3f(0.41, 0.52, 0.2); //verde bonito
+   glBegin(GL_TRIANGLE_STRIP);
+      for(rotation = 0.0; rotation<2*PI+PI/30; rotation+= PI/30){
+         glVertex3f(cos(rotation)*LARGURACOPA, ALTURAARVORE/3, sin(rotation)*LARGURACOPA);
+         glVertex3f(cos(rotation), ALTURAARVORE, sin(rotation));
+      }
+   glEnd();
+
+
 }
 
 void desenharVelocimetro(velocimetro vel){ //funcao especial para desenhar o velocimetro, unico caso onde nao usamos desenharObjeto
@@ -167,12 +321,18 @@ void desenharVelocimetro(velocimetro vel){ //funcao especial para desenhar o vel
    char aux[4]; //string auxiliar para converter inteiros que deverao ser corretamente desenhados na tela
    glColor3f(0.0, 0.0, 0.0);
    for(i=0; i<=vel.max; i+=10){
-      sprintf(aux, "%d", i);
+      sprintf(aux, "%d", i); //converte i para string e salva em aux
       offset = strlen(aux) * 0.1; //cos negativo para que x seja invertido e o circulo venha da esquerda pra direita e nao vice-versa
-      glRasterPos3f(-(cos(r) * (vel.tamanho*8/10)) - offset, sin(r) * (vel.tamanho*8/10), 0.3);
-      writeBitmapString((void*)font, aux);
+      glRasterPos3f(-(cos(r) * (vel.tamanho*8/10)) - offset, sin(r) * (vel.tamanho*8/10), 0.3); //define a posicao que o texto sera impresso
+      writeBitmapString((void*)font, aux); //imprime o texto
       r+= PI/(vel.max/10);
    }
+   
+   i = (vel.ponteiro/PI) * vel.max; //pega a velocidade atual com base no angulo do ponteiro 
+   sprintf(aux, "%d", i);
+   offset = strlen(aux) * 0.1;
+   glRasterPos3f(-offset, (vel.tamanho)/2, 0.4);
+   writeBitmapString((void*)font, aux);
 
    glLineWidth(2);
    glBegin(GL_LINES);
@@ -190,6 +350,23 @@ void desenharVelocimetro(velocimetro vel){ //funcao especial para desenhar o vel
 float calcularAnguloPonteiro(float max, float velocidade){ //recebe a velocidade maxima do ponteiro e a velocidade atual
    //a velocidade e recebida em decimetros por segundo, entao basta converter a velocidade maxima em decimetros tambem
    return (velocidade/(max*100/36)) * PI;
+}
+
+void desenharBotao(botao b){
+   glPushMatrix();
+      glTranslatef(b.x, b.y, 0.0);
+      glColor3f(b.cor[0],b.cor[1],b.cor[2]);
+      glBegin(GL_QUADS);
+         glVertex3f(0.0,       0.0,      0.0);
+         glVertex3f(b.largura, 0.0,      0.0); 
+         glVertex3f(b.largura, b.altura, 0.0); 
+         glVertex3f(0.0,       b.altura , 0.0);
+      glEnd();
+      float offset = strlen(b.texto) * 1;
+      glColor3f(1-b.cor[0], 1-b.cor[1], 1-b.cor[2]);
+      glRasterPos3f(b.largura/2 - offset, b.altura/2, 0.4);
+      writeBitmapString((void*)font, b.texto);
+   glPopMatrix();
 }
 
 //funcao especial que recebe a funcao de um objeto a ser desenhado, move a origem para (x,y,z) e rotaciona angl normal a y para desenhar
