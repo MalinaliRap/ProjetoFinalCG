@@ -117,7 +117,7 @@ void desenharRoda(){
    glEnd();
 }
 void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada apenas para testar as funcionalidades do carro
-   glColor3f(1.0, 1.0, 0.0); //cor do objeto
+   glColor3f(1.0, 0.3, 0.0); //cor do objeto
 
    // GLfloat especularidade[4]={1.0,1.0,1.0,1.0};
    // GLint especMaterial = 100;
@@ -209,6 +209,95 @@ void desenharCarro(){ //funcao temporariamente desenha apenas um circulo, usada 
       }
       glVertex3f(-22.5, 0.0, -13.0);
    glEnd();
+   //vidro frente
+   glEnable (GL_BLEND); 
+   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //ATIVA TRANSPARÊNCIA
+   
+   	glColor4f(1.0,1.0,1.0,0.4);
+   		glNormal3f(0, -1, 0);
+	   		glBegin(GL_QUADS);
+	   			glVertex3f(11.30, 7.5, -10);
+	   			glVertex3f(5.7, 15.0, -10);
+	   			glVertex3f(5.7, 15.0, 10);
+	   			glVertex3f(11.30, 7.5, 10);
+	   		glEnd();
+	   		glBegin(GL_QUADS);
+	   			glVertex3f(-11.30, 7.5, -10);
+	   			glVertex3f(-5.7, 15.0, -10);
+	   			glVertex3f(-5.7, 15.0, 10);
+	   			glVertex3f(-11.30, 7.5, 10);
+	   		glEnd();
+	   		glNormal3f(0, 0, -1);
+	   		glColor4f(1.0,1.0,1.0,0.5);
+	   		glBegin(GL_TRIANGLE_STRIP);
+	   			glVertex3f(-11.0, 7.5, 13.5);
+	   			glVertex3f(-0.5, 7.5, 13.5);
+	   			glVertex3f(-5.5, 14.0, 13.5);
+	   			glVertex3f(-0.5, 14.0, 13.5);
+	   		glEnd();
+	   			glBegin(GL_TRIANGLE_STRIP);
+	   			glVertex3f(10.0, 7.5, 13.5);
+	   			glVertex3f(0.5, 7.5, 13.5);
+	   			glVertex3f(5.5, 14.0, 13.5);
+	   			glVertex3f(0.5, 14.0, 13.5);
+	   		glEnd();
+	   		glBegin(GL_TRIANGLE_STRIP);
+	   			glVertex3f(-11.0, 7.5, -13.5);
+	   			glVertex3f(-0.5, 7.5, -13.5);
+	   			glVertex3f(-5.5, 14.0, -13.5);
+	   			glVertex3f(-0.5, 14.0, -13.5);
+	   		glEnd();
+	   		glBegin(GL_TRIANGLE_STRIP);
+	   			glVertex3f(10.0, 7.5, -13.5);
+	   			glVertex3f(0.5, 7.5, -13.5);
+	   			glVertex3f(5.5, 14.0, -13.5);
+	   			glVertex3f(0.5, 14.0, -13.5);
+	   		glEnd();
+	   		
+	   		//farois
+	   		glNormal3f(1, 1, 0);
+	   		glColor3f(1.0,1.0,0.0);
+	   		glBegin(GL_POLYGON);
+		   		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(22.55, 4.5+(cos(r)*1.5), 10.0+(sin(r)*1.5));
+	      		}
+	      		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(22.55, 4.5+(cos(r)*1.5), 10.0+(-sin(r)*1.5));
+	      		}
+	   		glEnd();
+	   		glBegin(GL_POLYGON);
+		   		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(22.55, 4.5+(cos(r)*1.5), -10.0+(sin(r)*1.5));
+	      		}
+	      		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(22.55, 4.5+(cos(r)*1.5), -10.0+(-sin(r)*1.5));
+	      		}
+	   		glEnd();
+	   		
+			glNormal3f(1, 1, 0);
+	   		glColor3f(1.0,0.0,0.0);
+	   		glBegin(GL_POLYGON);
+		   		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(-22.55, 4.5+(cos(r)*1.5), 10.0+(sin(r)*1.5));
+	      		}
+	      		glColor3f(1.0,1.0,1.0);
+	      		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(-22.55, 4.5+(cos(r)*1.5), 10.0+(-sin(r)*1.5));
+	      		}
+	   		glEnd();
+	   		
+	   		glBegin(GL_POLYGON);
+		   		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(-22.55, 4.5+(cos(r)*1.5), -10.0+(sin(r)*1.5));
+	      		}
+	      		glColor3f(1.0,0.0,0.0);
+	      		for(r=0; r<PI+PI/50; r+=PI/50){
+	         		glVertex3f(-22.55, 4.5+(cos(r)*1.5), -10.0+(-sin(r)*1.5));
+	      		}
+	   		glEnd();
+	   		
+	   		
+	   		
    glPopMatrix();
    // desenharObjeto(&desenharRoda, -13.5, 0.0, +13.5, 0);
    // desenharObjeto(&desenharRoda, -13.5, 0.0, -13.5, 180);
